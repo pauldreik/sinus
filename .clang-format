@@ -1,0 +1,7 @@
+---
+Language:        Cpp
+BasedOnStyle:  Mozilla
+Standard:        Cpp11
+UseTab:          Never
+...
+

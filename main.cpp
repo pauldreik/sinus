@@ -11,70 +11,7 @@
 #include "ImplementationBase.hpp"
 #include "VectorLibrary.hpp"
 
-enum class DataKind {
-    /// all values are 1e-30 or smaller
-    TINY,
-    ///linearly increasing 0 - 100*pi, realistic for my application
-    INCREASING,
-    /// binary garbage
-    GARBAGE
-};
-
-// makes Nelements of type T with data
-template<typename T>
-std::vector<T> makeData(std::size_t Nelements,DataKind kind, int seed) {
-    // worst seeding code ever :-(
-    std::seed_seq seeder{seed};
-    std::mt19937_64 engine(seeder);
-    std::vector<T> ret;
-    ret.reserve(Nelements);
-    switch(kind) {
-    case DataKind::TINY:
-    {
-        std::uniform_real_distribution<T> uniform_dist(-1e-30,1e-30);
-        for(size_t i=0; i<Nelements ; ++i) {
-            ret.emplace_back(uniform_dist(engine));
-        }
-    }
-        break;
-    case DataKind::INCREASING:
-    {
-        const auto endvalue=100*M_PI;
-        const double step=endvalue/Nelements;
-        double x=0;
-        for(size_t i=0; i<Nelements ; ++i) {
-            ret.emplace_back(x);
-            x+=step;
-        }
-    }
-        break;
-    case DataKind::GARBAGE:
-    {
-        for(size_t i=0; i<Nelements ; ++i) {
-            using Output=decltype (engine());
-            constexpr auto Nbytes=std::lcm(sizeof(T),sizeof (Output));
-            constexpr auto Noutput=Nbytes/sizeof(Output);
-            constexpr auto N_of_T=Nbytes/sizeof(T);
-            Output tmpbin[Noutput];
-            for(auto& e: tmpbin) {
-                e=engine();
-            }
-
-            T val[N_of_T];
-            std::memcpy(&val,&tmpbin,Nbytes);
-            for(size_t j=0; j<N_of_T && i<Nelements;++j,++i) {
-                ret.emplace_back(val[j]);
-            }
-        }
-    }
-        break;
-    default:
-        throw std::runtime_error("unimplemented kind");
-    }
-
-    return ret;
-}
-
+#include "GenerateData.hpp"
 
 // returns the speed in elements/s
 template<typename T, typename Implementation>
@@ -111,7 +48,6 @@ struct Std_sin : ImplementationBase {
     // increasing - 30 cycles/element
     // garbage - 100 cycles/element (because of how double is represented, this is mostly huge numbers)
     static double evaluate_sin(const double* p, int n) {
-
         // loop unrolling does not really help performance
         double sum1=0;
         double sum2=0;
@@ -132,7 +68,10 @@ struct Std_sin : ImplementationBase {
     }
 };
 
+
 int main(int /*argc*/, char* /*argv*/[]) {
+
+
     const auto seed=static_cast<int>(std::random_device{}());
     //runBenchmark<double,VectorLibrary>(3000,DataKind::TINY,seed);
     //runBenchmark<double,VectorLibrary>(3000,DataKind::GARBAGE,seed);
@@ -140,6 +79,8 @@ int main(int /*argc*/, char* /*argv*/[]) {
 //    runBenchmark<double,Std_sin>(3000,DataKind::INCREASING,seed);
 //    runBenchmark<double,Std_sin>(3000,DataKind::GARBAGE,seed);
 
+     runBenchmark<float,VectorLibrary>(3000,DataKind::MEDIUM,seed);
+   return 0;
     for(auto e : {DataKind::TINY,DataKind::INCREASING,DataKind::GARBAGE}) {
         runBenchmark<float,VectorLibrary>(3000,e,seed);
     }

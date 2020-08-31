@@ -10,7 +10,7 @@ So far, I have learned that the calculation speed is data dependent.
 ## Contenders
 The standard library std::sin() is obviously the reference to compare to.
 
-To use SIMD, (vectorlib by Agner Fog)[https://github.com/vectorclass/version2] is also used, called vectorlib in the results table.
+To use SIMD, [vectorlib by Agner Fog](https://github.com/vectorclass/version2) is also used, called vectorlib in the results table.
 
 There is also nooplib which does nothing, just for measuring the benchmarking overhead.
 

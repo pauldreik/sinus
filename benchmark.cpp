@@ -1,9 +1,9 @@
 #include "benchmark/benchmark.h"
 
 #include "GenerateData.hpp"
-#include "VectorLibrary.hpp"
-#include "StandardLibrary.hpp"
 #include "NoOpLib.hpp"
+#include "StandardLibrary.hpp"
+#include "VectorLibrary.hpp"
 
 template<typename Real, typename Impl>
 static void
@@ -23,36 +23,38 @@ generic(benchmark::State& state, DataKind kind, Real, Impl)
 
 template<typename Real>
 static void
-vectorlib(benchmark::State& state, DataKind kind, Real dummyval) {
-    generic(state,kind,dummyval,VectorLibrary());
+vectorlib(benchmark::State& state, DataKind kind, Real dummyval)
+{
+  generic(state, kind, dummyval, VectorLibrary());
 }
 template<typename Real>
 static void
-stdlib(benchmark::State& state, DataKind kind, Real dummyval) {
-    generic(state,kind,dummyval,StandardLibrary());
+stdlib(benchmark::State& state, DataKind kind, Real dummyval)
+{
+  generic(state, kind, dummyval, StandardLibrary());
 }
 template<typename Real>
 static void
-nooplib(benchmark::State& state, DataKind kind, Real dummyval) {
-    generic(state,kind,dummyval,NoOpLib());
+nooplib(benchmark::State& state, DataKind kind, Real dummyval)
+{
+  generic(state, kind, dummyval, NoOpLib());
 }
 
-BENCHMARK_CAPTURE(nooplib, overhead_measure_tiny, DataKind::TINY, 0.f);
-BENCHMARK_CAPTURE(vectorlib, tiny, DataKind::TINY, 0.f);
-BENCHMARK_CAPTURE(vectorlib, medium, DataKind::MEDIUM, 0.f);
-BENCHMARK_CAPTURE(vectorlib,
-                  increasing,
-                  DataKind::INCREASING,
-                  0.f);
-BENCHMARK_CAPTURE(vectorlib, garbage, DataKind::GARBAGE, 0.f);
+#ifndef FLOATTYPE
+#error please define FLOATTYPE to float or double
+#endif
 
+const FLOATTYPE floatdummy{};
 
-BENCHMARK_CAPTURE(stdlib, tiny, DataKind::TINY, 0.f);
-BENCHMARK_CAPTURE(stdlib, medium, DataKind::MEDIUM, 0.f);
-BENCHMARK_CAPTURE(stdlib,
-                  increasing,
-                  DataKind::INCREASING,
-                  0.f);
-BENCHMARK_CAPTURE(stdlib, garbage, DataKind::GARBAGE, 0.f);
+BENCHMARK_CAPTURE(nooplib, overhead_measure_tiny, DataKind::TINY, floatdummy);
+BENCHMARK_CAPTURE(vectorlib, tiny, DataKind::TINY, floatdummy);
+BENCHMARK_CAPTURE(vectorlib, medium, DataKind::MEDIUM, floatdummy);
+BENCHMARK_CAPTURE(vectorlib, increasing, DataKind::INCREASING, floatdummy);
+BENCHMARK_CAPTURE(vectorlib, garbage, DataKind::GARBAGE, floatdummy);
+
+BENCHMARK_CAPTURE(stdlib, tiny, DataKind::TINY, floatdummy);
+BENCHMARK_CAPTURE(stdlib, medium, DataKind::MEDIUM, floatdummy);
+BENCHMARK_CAPTURE(stdlib, increasing, DataKind::INCREASING, floatdummy);
+BENCHMARK_CAPTURE(stdlib, garbage, DataKind::GARBAGE, floatdummy);
 
 BENCHMARK_MAIN();

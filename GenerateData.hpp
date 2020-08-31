@@ -3,9 +3,9 @@
 #include <cassert>
 #include <cstring>
 #include <random>
-#include <vector>
 #include <stdexcept>
 #include <type_traits>
+#include <vector>
 
 enum class DataKind
 {
@@ -24,7 +24,7 @@ template<typename T>
 std::vector<T>
 makeData(std::size_t Nelements, DataKind kind, int seed)
 {
-  static_assert(std::is_arithmetic_v<T>,"use float or double for T");
+  static_assert(std::is_arithmetic_v<T>, "use float or double for T");
 
   // worst seeding code ever :-(
   std::seed_seq seeder{ seed };

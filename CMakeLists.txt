@@ -10,20 +10,29 @@ add_subdirectory(benchmark)
 
 
 
-add_executable(bench benchmark.cpp
+add_library(benchcommon
     VectorLibrary.cpp
     VectorLibrary.hpp
     StandardLibrary.hpp
     StandardLibrary.cpp
     NoOpLib.cpp)
-target_include_directories(bench PRIVATE vectorclass)
-target_compile_options(bench PRIVATE -mavx2 -mfma -mtune=native)
-target_compile_options(bench PRIVATE -fno-trapping-math -fno-math-errno)
-target_link_libraries(bench PRIVATE benchmark::benchmark)
+target_include_directories(benchcommon PUBLIC vectorclass)
+target_compile_options(benchcommon PUBLIC -mavx2 -mfma -mtune=native)
+target_compile_options(benchcommon PUBLIC -fno-trapping-math -fno-math-errno)
+target_link_libraries(benchcommon PUBLIC benchmark::benchmark)
 
 # warnings
-target_compile_options(bench PRIVATE -Wall)
+target_compile_options(benchcommon PUBLIC -Wall)
 
 # enable this for sanitizer support
 #target_compile_options(bench PRIVATE -fsanitize=address)
 #target_link_options(bench PRIVATE -fsanitize=address)
+
+add_executable(benchfloat benchmark.cpp)
+target_link_libraries(benchfloat PRIVATE benchcommon)
+target_compile_definitions(benchfloat PRIVATE FLOATTYPE=float)
+
+
+add_executable(benchdouble benchmark.cpp)
+target_link_libraries(benchdouble PRIVATE benchcommon)
+target_compile_definitions(benchdouble PRIVATE FLOATTYPE=double)

@@ -51,12 +51,20 @@ std::vector<T> makeData(std::size_t Nelements,DataKind kind, int seed) {
     case DataKind::GARBAGE:
     {
         for(size_t i=0; i<Nelements ; ++i) {
-            const auto tmpbin=engine();
-            using Output=decltype (tmpbin);
-            static_assert(sizeof(Output)==sizeof(T),"fix implementation");
-            T val;
-            std::memcpy(&val,&tmpbin,sizeof(tmpbin));
-            ret.emplace_back(val);
+            using Output=decltype (engine());
+            constexpr auto Nbytes=std::lcm(sizeof(T),sizeof (Output));
+            constexpr auto Noutput=Nbytes/sizeof(Output);
+            constexpr auto N_of_T=Nbytes/sizeof(T);
+            Output tmpbin[Noutput];
+            for(auto& e: tmpbin) {
+                e=engine();
+            }
+
+            T val[N_of_T];
+            std::memcpy(&val,&tmpbin,Nbytes);
+            for(size_t j=0; j<N_of_T && i<Nelements;++j,++i) {
+                ret.emplace_back(val[j]);
+            }
         }
     }
         break;
@@ -93,6 +101,7 @@ double runBenchmark(std::size_t Nelements,DataKind kind, int seed) {
     const auto dt=std::chrono::duration_cast<std::chrono::duration<double>>(t1-t0).count();
     const auto speed=Nvals/dt;
     std::cout<<"the sum is "<<sum<<" speed is "<<Nvals<<" in "<<dt<<"="<<speed<<" values per second.\n";
+    std::cout<<3e9/speed<<'\n';
     return speed;
 }
 
@@ -102,19 +111,36 @@ struct Std_sin : ImplementationBase {
     // increasing - 30 cycles/element
     // garbage - 100 cycles/element (because of how double is represented, this is mostly huge numbers)
     static double evaluate_sin(const double* p, int n) {
-        double sum=0;
-        for(int i=0; i<n;++i) {
-            sum +=std::sin(p[i]);
+
+        // loop unrolling does not really help performance
+        double sum1=0;
+        double sum2=0;
+        double sum3=0;
+        double sum4=0;
+        int nfour=(n/4)*4;
+        int i=0;
+        for(; i<nfour;i+=4) {
+            sum1 +=std::sin(p[i+0]);
+            sum2 +=std::sin(p[i+1]);
+            sum3 +=std::sin(p[i+2]);
+            sum4 +=std::sin(p[i+3]);
         }
-        return sum;
+        for(; i<n;++i) {
+            sum1 +=std::sin(p[i]);
+        }
+        return sum1+sum2+sum3+sum4;
     }
 };
 
 int main(int /*argc*/, char* /*argv*/[]) {
     const auto seed=static_cast<int>(std::random_device{}());
     //runBenchmark<double,VectorLibrary>(3000,DataKind::TINY,seed);
-    runBenchmark<double,VectorLibrary>(3000,DataKind::GARBAGE,seed);
-    //runBenchmark<double,Std_sin>(3000,DataKind::TINY,seed);
-    //runBenchmark<double,Std_sin>(3000,DataKind::INCREASING,seed);
-    //runBenchmark<double,Std_sin>(3000,DataKind::GARBAGE,seed);
+    //runBenchmark<double,VectorLibrary>(3000,DataKind::GARBAGE,seed);
+//    runBenchmark<double,Std_sin>(3000,DataKind::TINY,seed);
+//    runBenchmark<double,Std_sin>(3000,DataKind::INCREASING,seed);
+//    runBenchmark<double,Std_sin>(3000,DataKind::GARBAGE,seed);
+
+    for(auto e : {DataKind::TINY,DataKind::INCREASING,DataKind::GARBAGE}) {
+        runBenchmark<float,VectorLibrary>(3000,e,seed);
+    }
 }

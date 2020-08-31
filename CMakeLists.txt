@@ -7,7 +7,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_executable(untitled main.cpp VectorLibrary.cpp VectorLibrary.hpp)
 target_include_directories(untitled PRIVATE vectorclass)
-target_compile_options(untitled PRIVATE -mavx2 -mfma  -fno-trapping-math -fno-math-errno)
+target_compile_options(untitled PRIVATE -mavx2 -mfma -mtune=native)
+target_compile_options(untitled PRIVATE -fno-trapping-math -fno-math-errno)
 
 # warnings
 target_compile_options(untitled PRIVATE -Wall)

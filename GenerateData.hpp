@@ -4,16 +4,18 @@
 #include <cstring>
 #include <random>
 #include <vector>
+#include <stdexcept>
+#include <type_traits>
 
 enum class DataKind
 {
-  /// all values are 1e-30 or smaller
+  /// uniformly distributed values, absolute value is 1e-30 or smaller
   TINY,
-  /// normal values, within +-100
+  /// uniformly distributed values, within +-100
   MEDIUM,
   /// linearly increasing 0 - 100*pi, realistic for my application
   INCREASING,
-  /// binary garbage
+  /// binary garbage, "line noise"
   GARBAGE
 };
 
@@ -22,6 +24,8 @@ template<typename T>
 std::vector<T>
 makeData(std::size_t Nelements, DataKind kind, int seed)
 {
+  static_assert(std::is_arithmetic_v<T>,"use float or double for T");
+
   // worst seeding code ever :-(
   std::seed_seq seeder{ seed };
   std::mt19937_64 engine(seeder);
@@ -36,7 +40,7 @@ makeData(std::size_t Nelements, DataKind kind, int seed)
     } break;
 
     case DataKind::MEDIUM: {
-      std::uniform_real_distribution<T> uniform_dist(-1e-30, 1e-23);
+      std::uniform_real_distribution<T> uniform_dist(-100, 100);
       for (size_t i = 0; i < Nelements; ++i) {
         ret.emplace_back(uniform_dist(engine));
       }

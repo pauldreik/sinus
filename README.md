@@ -14,6 +14,21 @@ To use SIMD, [vectorclass by Agner Fog](https://github.com/vectorclass/version2)
 
 There is also nooplib which does nothing, just for measuring the benchmarking overhead.
 
+## Building the code and benchmark
+You need a C++17 capable compiler and cmake.
+
+```shell
+git clone https://github.com/pauldreik/sinus/
+cd sinus/
+git submodule update --init
+mkdir build
+cd build
+cmake -DCMAKE_BUILD_TYPE=Release ..
+cmake --build . -j 4 
+./benchfloat
+./benchdouble
+```
+
 ## Test data
 Since I do this with a specific application in mind, I try to mimick the application as close as possible.
 

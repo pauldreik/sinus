@@ -52,10 +52,10 @@ static inline Vec4d sincos_d( Vec4d const xorig) {
     typedef decltype(nan_code(xorig)) UITYPE;       // unsigned integer vector type
     typedef decltype(xorig < xorig) BVTYPE;            // boolean vector type
 
-    VTYPE  xabs, x, yscaled, x2, s, c, sin1, cos1;       // data vectors
-    ITYPE  quadrant, qq, signsin, signcos;              // integer vectors, 64 bit
+    //VTYPE  xabs, x, yscaled, x2, s, c, sin1, cos1;       // data vectors
+    //ITYPE  quadrant, qq, signsin, signcos;              // integer vectors, 64 bit
 
-    BVTYPE swap, overflow;                       // boolean vectors
+    //BVTYPE swap, overflow;                       // boolean vectors
 
 
     //findsector
@@ -73,38 +73,49 @@ static inline Vec4d sincos_d( Vec4d const xorig) {
                                        DP2*4/Nsectors,
                                        nmul_add(yscaledNsector,
                                                 DP1*4/Nsectors,
-                                                xabs)));    // x = ((xa - y * DP1) - y * DP2) - y * DP3;
+                                                xorig)));    // x = ((xa - y * DP1) - y * DP2) - y * DP3;
 //    auto debug_xNsector=xNsector[0];
 
     // Expansion of sin and cos, valid for -pi/4 <= x <= pi/4
-    VTYPE x2Nsector = xNsector*xNsector;
+    const VTYPE x2Nsector = xNsector*xNsector;
 //    auto debug_x2Nsector=x2Nsector[0];
 
 //    VTYPE sNsector = polynomial_5(x2Nsector, P0sin, P1sin, P2sin, P3sin, P4sin, P5sin);
 //    VTYPE cNsector = polynomial_5(x2Nsector, P0cos, P1cos, P2cos, P3cos, P4cos, P5cos);
-    VTYPE sNsector = polynomial_2(x2Nsector, P0sin, P1sin, P2sin);//, P3sin, P4sin, P5sin);
-    VTYPE cNsector = polynomial_2(x2Nsector, P0cos, P1cos, P2cos);//, P3cos, P4cos, P5cos);
-    sNsector=mul_add(xNsector * x2Nsector, sNsector, xNsector);
-    cNsector = mul_add(x2Nsector * x2Nsector, cNsector, nmul_add(x2Nsector, 0.5, 1.0));
+    //VTYPE sNsector = polynomial_2(x2Nsector, P0sin, P1sin, P2sin);//, P3sin, P4sin, P5sin);
+    //VTYPE cNsector = polynomial_2(x2Nsector, P0cos, P1cos, P2cos);//, P3cos, P4cos, P5cos);
+    const auto x3=xNsector * x2Nsector;
+    const VTYPE sNsector=mul_add(x3, polynomial_3(x2Nsector, P0sin, P1sin, P2sin, P3sin/*, P4sin, P5sin*/), xNsector);
+    const VTYPE cNsector = mul_add(x3, polynomial_3(x2Nsector, P0cos, P1cos, P2cos, P3cos/*, P4cos, P5cos*/), nmul_add(x2Nsector, 0.5, 1.0));
 //    auto debug_sNsector=sNsector[0];
 //    auto debug_cNsector=cNsector[0];
     // rotate into place with the rotation matrix
     //  [ rC  -rS] [cNsector]
     //  [ rS rC] [sNsector]
     // disp(sprintf('%#.3g, ',cos([0:15]/16*2*pi)))
-    /*
+    
+#if 0
     static_assert(Nsectors==16);
-    const double Ctable[Nsectors]={  1.00, 0.924, 0.707, 0.383, 6.12e-17, -0.383, -0.707, -0.924, -1.00, -0.924, -0.707, -0.383, -1.84e-16, 0.383, 0.707, 0.924};
+    const double Ctable[Nsectors]={  1.00, 0.924, 0.707, 0.383, 6.12e-17, -0.383, -0.707,
+                -0.924, -1.00, -0.924, -0.707, -0.383, -1.84e-16, 0.383, 0.707, 0.924};
     const double Stable[Nsectors]={0.00, 0.383, 0.707, 0.924, 1.00, 0.924, 0.707, 0.383, 1.22e-16, -0.383, -0.707, -0.924, -1.00, -0.924, -0.707, -0.383};
-    */
+    #endif
+#if 1
     static_assert(Nsectors==8);
     const double Ctable[Nsectors]={ 1.00, 0.707, 6.12e-17, -0.707, -1.00, -0.707, -1.84e-16, 0.707, };
-    const double Stable[Nsectors]={0.00, 0.707, 1.00, 0.707, 1.22e-16, -0.707, -1.00, -0.707, };
-
+    const double Stable[Nsectors]={0.00, 0.707, 1.00, 0.707, .0, -0.707, -1.00, -0.707, };
+    const double CStable[Nsectors+Nsectors/4]={0.00, 0.707, 1.00, 0.707, .0, -0.707, -1.00, -0.707,
+                                                       0.0, 0.707};
+#endif
+#if 0
+    static_assert(Nsectors==4);
+    const double Ctable[Nsectors]={ 1., 0.0, -1.0, 0.0, };
+    const double Stable[Nsectors]={0.0, 1.0, 0.0, -1.0, };
+#endif
 //    auto debug_index=(quadrantNsector & (Nsectors-1))[0];
-    const auto index=quadrantNsector & (Nsectors-1);
-    VTYPE rC=lookup<Nsectors>(index,Ctable);
-    VTYPE rS=lookup<Nsectors>(index,Stable);
+    const auto index=quadrantNsector &(Nsectors-1);
+    const VTYPE rC=lookup<Nsectors>(index,CStable+Nsectors/4);
+    const VTYPE rS=lookup<Nsectors>(index,CStable);
 //    auto debug_rC=rC[0];
 
     auto rotated_cos=mul_sub(rC,cNsector,rS*sNsector); // rC*cNsector-rS*sNsector
@@ -115,10 +126,10 @@ static inline Vec4d sincos_d( Vec4d const xorig) {
 
 
     // check for overflow
-    overflow = BVTYPE(UITYPE(quadrantNsector) > 0x80000000000000);  // q big if overflow
+    const BVTYPE overflow = BVTYPE(UITYPE(quadrantNsector) > 0x80000000000000) & is_finite(xorig);  // q big if overflow
 //    auto debug_overflow=overflow[0];
 
-    overflow &= is_finite(xorig);
+   // overflow &= is_finite(xorig);
 //    debug_overflow=overflow[0];
 
     rotated_sin = select(overflow, 0.0, rotated_sin);

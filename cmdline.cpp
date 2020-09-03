@@ -11,19 +11,22 @@ int main(int argc, char*argv[]) {
 
     std::cout<<std::scientific<<std::setprecision(18);
 
+    size_t total_count=0;
     while(std::cin) {
         std::array<double,20> buffer;
 
         std::size_t count=0;
         double tmp;
-        while(std::cin>>tmp && count<buffer.size()) {
+        while(count<buffer.size() && std::cin>>tmp) {
             buffer[count++]=tmp;
         }
 
-        VectorLibrary::inplace_sin(buffer.data(),count);
+        PaulVectorLibrary::inplace_sin(buffer.data(),count);
 
         for(std::size_t i=0; i<count ; ++i) {
             std::cout<<buffer[i]<<'\n';
         }
+        total_count+=count;
     }
+    std::cerr<<"wrote "<<total_count<<" values\n";
 }

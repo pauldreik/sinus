@@ -86,14 +86,17 @@ static inline Vec4d sincos_d( Vec4d const xorig) {
     //VTYPE cNsector = polynomial_2(x2Nsector, P0cos, P1cos, P2cos);//, P3cos, P4cos, P5cos);
     const auto x3=xNsector * x2Nsector;
     const VTYPE sNsector=mul_add(x3, polynomial_3(x2Nsector, P0sin, P1sin, P2sin, P3sin/*, P4sin, P5sin*/), xNsector);
-    const VTYPE cNsector = mul_add(x3, polynomial_3(x2Nsector, P0cos, P1cos, P2cos, P3cos/*, P4cos, P5cos*/), nmul_add(x2Nsector, 0.5, 1.0));
+    const VTYPE cNsector = mul_add(x2Nsector*x2Nsector, polynomial_3(x2Nsector, P0cos, P1cos, P2cos, P3cos/*, P4cos, P5cos*/),
+                                   nmul_add(x2Nsector, 0.5, 1.0));
 //    auto debug_sNsector=sNsector[0];
 //    auto debug_cNsector=cNsector[0];
     // rotate into place with the rotation matrix
     //  [ rC  -rS] [cNsector]
     //  [ rS rC] [sNsector]
     // disp(sprintf('%#.3g, ',cos([0:15]/16*2*pi)))
-    
+
+    const double sqrt2inv=M_SQRT1_2;
+
 #if 0
     static_assert(Nsectors==16);
     const double Ctable[Nsectors]={  1.00, 0.924, 0.707, 0.383, 6.12e-17, -0.383, -0.707,
@@ -104,8 +107,8 @@ static inline Vec4d sincos_d( Vec4d const xorig) {
     static_assert(Nsectors==8);
     const double Ctable[Nsectors]={ 1.00, 0.707, 6.12e-17, -0.707, -1.00, -0.707, -1.84e-16, 0.707, };
     const double Stable[Nsectors]={0.00, 0.707, 1.00, 0.707, .0, -0.707, -1.00, -0.707, };
-    const double CStable[Nsectors+Nsectors/4]={0.00, 0.707, 1.00, 0.707, .0, -0.707, -1.00, -0.707,
-                                                       0.0, 0.707};
+    const double CStable[Nsectors+Nsectors/4]={0.00, sqrt2inv, 1.00, sqrt2inv, .0, -sqrt2inv, -1.00, -sqrt2inv,
+                                                       0.0, sqrt2inv};
 #endif
 #if 0
     static_assert(Nsectors==4);

@@ -36,3 +36,6 @@ target_compile_definitions(benchfloat PRIVATE FLOATTYPE=float)
 add_executable(benchdouble benchmark.cpp)
 target_link_libraries(benchdouble PRIVATE benchcommon)
 target_compile_definitions(benchdouble PRIVATE FLOATTYPE=double)
+
+add_executable(cmdline cmdline.cpp)
+target_link_libraries(cmdline PRIVATE benchcommon)
